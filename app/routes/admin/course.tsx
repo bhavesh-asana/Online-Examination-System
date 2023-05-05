@@ -180,13 +180,12 @@ export default function ManageCourses() {
 													{course.name}
 												</td>
 												<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
-													<ul>
+													<ul className="flex flex-col gap-2">
 														{course.sections.map(section => (
 															<li key={section.id}>
+																<p className="font-bold">{section.name}</p>
 																<p>
-																	{section.name} ({section.day})
-																</p>
-																<p>
+																	{section.day} :{' '}
 																	{formatTime(section.startTime)} -{' '}
 																	{formatTime(section.endTime)}
 																</p>

@@ -23,6 +23,7 @@ export const loader = async ({request}: LoaderArgs) => {
 	const schedules = await db.studentSchedule.findMany({
 		where: {studentId},
 		include: {
+			tests: true,
 			section: {
 				include: {
 					course: true,

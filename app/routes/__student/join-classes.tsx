@@ -1,5 +1,5 @@
 import {ArrowLeftIcon} from '@heroicons/react/24/solid'
-import {Button} from '@mantine/core'
+import {Button, Tooltip} from '@mantine/core'
 import type {ActionArgs} from '@remix-run/node'
 import {json} from '@remix-run/node'
 import {Link, useFetcher} from '@remix-run/react'
@@ -9,7 +9,7 @@ import {TailwindContainer} from '~/components/TailwindContainer'
 import {db} from '~/db.server'
 import {requireUserId} from '~/session.server'
 import {useStudentData} from '~/utils/hooks'
-import {formatTime} from '~/utils/misc'
+import {formatTime, setFixedDate} from '~/utils/misc'
 import {badRequest} from '~/utils/misc.server'
 import type {inferErrors} from '~/utils/validation'
 import {validateAction} from '~/utils/validation'
@@ -62,113 +62,107 @@ export default function ManageSection() {
 
 	return (
 		<>
-			<TailwindContainer className="rounded-md bg-white">
-				<div className="mt-8 px-4 py-10 sm:px-6 lg:px-8">
+			<TailwindContainer className="rounded-md">
+				<div className="px-4 py-10 sm:px-6 lg:px-8">
 					<div className="sm:flex sm:flex-auto sm:items-center sm:justify-between">
 						<div>
 							<Button
 								leftIcon={<ArrowLeftIcon className="h-4 w-4" />}
-								variant="white"
+								variant="subtle"
 								size="md"
 								component={Link}
 								to=".."
-								pl={0}
 								mb={20}
 								color="gray"
 							>
 								Back
 							</Button>
-							<h1 className="text-3xl font-semibold text-gray-900">
-								Join Classes
+							<h1 className="flex w-full items-center justify-center text-3xl font-semibold text-gray-900">
+								All Classes
 							</h1>
-							<p className="mt-2 text-sm text-gray-700">
-								A list of all the classes available for you to join.
-							</p>
 						</div>
 					</div>
 					<div className="mt-8 flex flex-col">
 						<div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
 							<div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-								<table className="min-w-full divide-y divide-gray-300">
-									<thead>
-										<tr>
-											<th
-												scope="col"
-												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
-											>
-												Course
-											</th>
-											<th
-												scope="col"
-												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
-											>
-												Section
-											</th>
+								<ul className="grid grid-cols-3 gap-6">
+									{allSections.map(section => {
+										const isAlreadyEnrolled = schedules.some(
+											s => s.sectionId === section.id
+										)
 
-											<th
-												scope="col"
-												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
-											>
-												Time
-											</th>
+										const isInConflict = schedules.some(s => {
+											if (s.sectionId === section.id) {
+												return false
+											}
 
-											<th
-												scope="col"
-												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
-											>
-												Faculty
-											</th>
-											<th
-												scope="col"
-												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
-											>
-												Room
-											</th>
-											<th
-												scope="col"
-												className="relative py-3.5 pl-3 pr-4 sm:pr-6 md:pr-0"
-											></th>
-										</tr>
-									</thead>
+											const isSameDay = s.section.day === section.day
+											if (!isSameDay) {
+												return false
+											}
 
-									<tbody className="divide-y divide-gray-200">
-										{allSections.map(section => {
-											const isAlreadyEnrolled = schedules.some(
-												s => s.sectionId === section.id
+											const currentSectionStart = setFixedDate(
+												new Date(section.startTime)
+											)
+											const currentSectionEnd = setFixedDate(
+												new Date(section.endTime)
+											)
+
+											const otherSectionStart = setFixedDate(
+												new Date(s.section.startTime)
+											)
+											const otherSectionEnd = setFixedDate(
+												new Date(s.section.endTime)
 											)
 
 											return (
-												<tr key={section.id}>
-													<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
-														{section.course.name} ({section.course.code})
-													</td>
+												(currentSectionStart >= otherSectionStart &&
+													currentSectionStart <= otherSectionEnd) ||
+												(currentSectionEnd >= otherSectionStart &&
+													currentSectionEnd <= otherSectionEnd)
+											)
+										})
 
-													<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
-														{section.name} ({section.code})
-													</td>
+										return (
+											<Tooltip.Floating
+												label="Conflicts with another class"
+												color="red"
+												disabled={!isInConflict}
+												position="left"
+												key={section.id}
+											>
+												<li className="flex flex-col gap-4 rounded border bg-gray-700 p-4 text-white">
+													<p>
+														Course: {section.course.name} ({section.course.code}
+														)
+													</p>
 
-													<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
-														<p className="font-medium">{section.day}</p>
-														<span className="text-xs text-gray-500">
+													<p>
+														Section: {section.name} ({section.code})
+													</p>
+
+													<p>
+														<span className="font-medium">{section.day}</span>
+														<span>
 															{formatTime(section.startTime)} -{' '}
 															{formatTime(section.endTime)}
 														</span>
-													</td>
+													</p>
 
-													<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
-														{section.faculty.name}
-													</td>
+													<p>Faculty: {section.faculty.name}</p>
 
-													<td className="relative space-x-4 whitespace-nowrap py-4 pl-3 pr-4 text-left text-sm font-medium sm:pr-6 md:pr-0">
+													<p>
+														Room:
 														{section.room.no}
-													</td>
-													<td className="relative space-x-4 whitespace-nowrap py-4 pl-3 pr-4 text-left text-sm font-medium sm:pr-6 md:pr-0">
+													</p>
+
+													<div>
 														<Button
 															variant="subtle"
 															compact
 															loading={isSubmitting}
 															color="blue"
-															disabled={isAlreadyEnrolled}
+															disabled={isAlreadyEnrolled || isInConflict}
 															onClick={() => {
 																fetcher.submit(
 																	{
@@ -181,14 +175,18 @@ export default function ManageSection() {
 																)
 															}}
 														>
-															{isAlreadyEnrolled ? 'Enrolled' : 'Enroll'}
+															{isAlreadyEnrolled
+																? 'Enrolled'
+																: isInConflict
+																? 'Conflict'
+																: 'Enroll'}
 														</Button>
-													</td>
-												</tr>
-											)
-										})}
-									</tbody>
-								</table>
+													</div>
+												</li>
+											</Tooltip.Floating>
+										)
+									})}
+								</ul>
 							</div>
 						</div>
 					</div>

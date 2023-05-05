@@ -32,6 +32,12 @@ const actions = [
 		href: 'sections',
 		icon: BuildingOfficeIcon,
 	},
+	{
+		title: 'Students',
+		description: 'View and manage students',
+		href: 'students',
+		icon: UserIcon,
+	},
 ]
 
 export const loader = async ({request}: LoaderArgs) => {
@@ -42,16 +48,16 @@ export const loader = async ({request}: LoaderArgs) => {
 export default function AdminDashboard() {
 	return (
 		<div className="flex flex-col gap-4 p-4">
-			<div className="bg-white">
+			<div>
 				<TailwindContainer>
 					<div className="py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
 						<h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
 							Admin Dashboard
 						</h2>
 
-						<div className="mt-12 divide-y divide-gray-200 overflow-hidden rounded-lg bg-gray-200 shadow sm:grid sm:grid-cols-2 sm:gap-px sm:divide-y-0">
-							{actions.map((action, actionIdx) => (
-								<Card action={action} actionIdx={actionIdx} key={actionIdx} />
+						<div className="mt-12 sm:grid sm:grid-cols-2 sm:gap-4">
+							{actions.map(action => (
+								<Card action={action} key={action.href} />
 							))}
 						</div>
 					</div>
@@ -61,38 +67,15 @@ export default function AdminDashboard() {
 	)
 }
 
-function Card({
-	action,
-	actionIdx,
-}: {
-	action: typeof actions[number]
-	actionIdx: number
-}) {
+function Card({action}: {action: typeof actions[number]}) {
 	return (
 		<div
 			key={action.title}
 			className={clsx(
-				actionIdx === 0 ? 'rounded-tl-lg rounded-tr-lg sm:rounded-tr-none' : '',
-				actionIdx === 1 ? 'sm:rounded-tr-lg' : '',
-				actionIdx === actions.length - 2 ? 'sm:rounded-bl-lg' : '',
-				actionIdx === actions.length - 1
-					? 'rounded-bl-lg rounded-br-lg sm:rounded-bl-none'
-					: '',
-				'group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500'
+				'group relative rounded border bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500'
 			)}
 		>
 			<div>
-				<span
-					className={clsx(
-						'text-blue-700',
-						'bg-blue-50',
-						'inline-flex rounded-lg p-3 ring-4 ring-white'
-					)}
-				>
-					<action.icon className="h-6 w-6" aria-hidden="true" />
-				</span>
-			</div>
-			<div className="mt-8">
 				<h3 className="text-lg font-medium">
 					<Link to={action.href} className="focus:outline-none">
 						{/* Extend touch target to entire panel */}

@@ -1,6 +1,14 @@
 import {ArrowLeftOnRectangleIcon} from '@heroicons/react/24/solid'
 
-import {Anchor, Avatar, Divider, Header, Menu, ScrollArea} from '@mantine/core'
+import {
+	Anchor,
+	Avatar,
+	Button,
+	Divider,
+	Header,
+	Menu,
+	ScrollArea,
+} from '@mantine/core'
 import type {LoaderArgs, SerializeFrom} from '@remix-run/node'
 import {json, redirect} from '@remix-run/node'
 import type {ShouldReloadFunction} from '@remix-run/react'
@@ -71,6 +79,10 @@ function HeaderComponent() {
 						</div>
 
 						<div className="flex items-center gap-4">
+							<Button component={Link} to="tests" variant="outline" compact>
+								Tests
+							</Button>
+
 							<Menu
 								position="bottom-start"
 								withArrow
@@ -108,16 +120,4 @@ function HeaderComponent() {
 			</Header>
 		</>
 	)
-}
-
-export const unstable_shouldReload: ShouldReloadFunction = ({
-	submission,
-	prevUrl,
-	url,
-}) => {
-	if (!submission && prevUrl.pathname === url.pathname) {
-		return false
-	}
-
-	return true
 }

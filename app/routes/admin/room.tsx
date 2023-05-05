@@ -36,20 +36,27 @@ export const action: ActionFunction = async ({request}) => {
 		return badRequest<ActionData>({success: false, fieldErrors})
 	}
 
-	const {roomId, ...rest} = fields
-	const id = new ObjectId()
+	const {roomId, no, maxCapacity} = fields
+	const id = new ObjectId().toString()
 
 	await db.room.upsert({
 		where: {
-			id: roomId || id.toString(),
+			id: roomId || id,
 		},
-		update: {...rest},
-		create: {...rest},
+		update: {
+			maxCapacity,
+			no,
+		},
+		create: {
+			id,
+			maxCapacity,
+			no,
+		},
 	})
 	return json({success: true})
 }
 
-export default function ManageVenues() {
+export default function ManageRooms() {
 	const fetcher = useFetcher<ActionData>()
 	const {rooms} = useAdminData()
 
@@ -198,8 +205,8 @@ export default function ManageVenues() {
 					handleModal.close()
 				}}
 				title={clsx({
-					'Edit venue': mode === MODE.edit,
-					'Add venue': mode === MODE.add,
+					'Edit room': mode === MODE.edit,
+					'Add room': mode === MODE.add,
 				})}
 				centered
 				overlayBlur={1.2}
@@ -207,7 +214,7 @@ export default function ManageVenues() {
 			>
 				<fetcher.Form method="post" replace>
 					<fieldset disabled={isSubmitting} className="flex flex-col gap-4">
-						<input type="hidden" name="venueId" value={selectedRoom?.id} />
+						<input type="hidden" name="roomId" value={selectedRoom?.id} />
 
 						<TextInput
 							name="no"

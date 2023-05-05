@@ -65,3 +65,16 @@ export function combineDateAndTime(date: string, time: string) {
 	const dateTimeString = date + ' ' + time + ':00'
 	return new Date(dateTimeString)
 }
+
+export const setFixedDate = (date: Date) => {
+	const fixedDate = new Date('2000-01-01T00:00:00Z')
+	return new Date(
+		fixedDate.getFullYear(),
+		fixedDate.getMonth(),
+		fixedDate.getDate(),
+		date.getHours(),
+		date.getMinutes(),
+		date.getSeconds(),
+		date.getMilliseconds()
+	)
+}
