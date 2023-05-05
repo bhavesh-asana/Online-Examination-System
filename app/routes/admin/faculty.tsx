@@ -9,7 +9,7 @@ import {z} from 'zod'
 import {TailwindContainer} from '~/components/TailwindContainer'
 import {db} from '~/db.server'
 import {useAdminData} from '~/utils/hooks'
-import {badRequest} from '~/utils/misc.server'
+import {badRequest, createPasswordHash} from '~/utils/misc.server'
 import type {inferErrors} from '~/utils/validation'
 import {validateAction} from '~/utils/validation'
 import * as React from 'react'
@@ -38,7 +38,7 @@ export const action: ActionFunction = async ({request}) => {
 		data: {
 			email,
 			name,
-			password,
+			password: await createPasswordHash(password),
 			role: UserRole.FACULTY,
 		},
 	})

@@ -182,6 +182,16 @@ export default function ManageSection() {
 													>
 														Drop
 													</Button>
+
+													<Button
+														variant="subtle"
+														compact
+														component={Link}
+														to={`/classes/${schedule.sectionId}`}
+														disabled={isSubmitting}
+													>
+														View
+													</Button>
 												</td>
 											</tr>
 										))}

@@ -50,7 +50,7 @@ export function Document({
 			withNormalizeCSS
 			emotionCache={appendCache}
 			theme={{
-				primaryColor: 'dark',
+				primaryColor: 'indigo',
 			}}
 		>
 			<html lang="en" className="h-full">

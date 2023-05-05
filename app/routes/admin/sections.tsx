@@ -1,17 +1,21 @@
-import {ArrowLeftIcon, PlusIcon} from '@heroicons/react/24/solid'
-import {Button, Modal, Select, TextInput, clsx} from '@mantine/core'
+import {
+	ArrowLeftIcon,
+	InformationCircleIcon,
+	PlusIcon,
+} from '@heroicons/react/24/solid'
+import {Alert, Button, Modal, Select, TextInput, clsx} from '@mantine/core'
 import {TimeInput} from '@mantine/dates'
 import {useDisclosure} from '@mantine/hooks'
 import {Day} from '@prisma/client'
 import type {ActionFunction} from '@remix-run/node'
 import {json} from '@remix-run/node'
-import {Link, useFetcher} from '@remix-run/react'
+import {Form, Link, useFetcher} from '@remix-run/react'
 import * as React from 'react'
 import {z} from 'zod'
 import {TailwindContainer} from '~/components/TailwindContainer'
 import {db} from '~/db.server'
 import {useAdminData} from '~/utils/hooks'
-import {formatTime} from '~/utils/misc'
+import {formatTime, setFixedDate} from '~/utils/misc'
 import {badRequest} from '~/utils/misc.server'
 import type {inferErrors} from '~/utils/validation'
 import {validateAction} from '~/utils/validation'
@@ -47,10 +51,8 @@ export const action: ActionFunction = async ({request}) => {
 		return badRequest<ActionData>({success: false, fieldErrors})
 	}
 
-	const startDate = new Date()
-	startDate.setHours(parseInt(fields.startTime), 0, 0, 0) // Set minutes, seconds, and milliseconds to 0
-	const endDate = new Date()
-	endDate.setHours(parseInt(fields.endTime), 0, 0, 0) // Set minutes, seconds, and milliseconds to 0
+	const _startTime = setFixedDate(new Date(fields.startTime))
+	const _endTime = setFixedDate(new Date(fields.endTime))
 
 	const {sectionId, ...rest} = fields
 
@@ -66,8 +68,8 @@ export const action: ActionFunction = async ({request}) => {
 				roomId: rest.roomId,
 				facultyId: rest.facultyId,
 				day: rest.day as Day,
-				startTime: startDate,
-				endTime: endDate,
+				startTime: _startTime,
+				endTime: _endTime,
 			},
 		})
 
@@ -82,8 +84,8 @@ export const action: ActionFunction = async ({request}) => {
 			roomId: rest.roomId,
 			facultyId: rest.facultyId,
 			day: rest.day as Day,
-			startTime: startDate,
-			endTime: endDate,
+			startTime: _startTime,
+			endTime: _endTime,
 		},
 	})
 
@@ -102,8 +104,25 @@ export default function ManageSections() {
 	const [selectedSection, setSelectedSection] = React.useState<_Section | null>(
 		null
 	)
+
+	const [startTime, setStartTime] = React.useState<Date | null>(null)
+	const [endTime, setEndTime] = React.useState<Date | null>(null)
+	const [day, setDay] = React.useState<Day | null>(null)
+	const [roomId, setRoomId] = React.useState<string | null>(null)
+	const [facultyId, setFacultyId] = React.useState<string | null>(null)
+
 	const [mode, setMode] = React.useState<MODE>(MODE.edit)
-	const [isModalOpen, handleModal] = useDisclosure(false)
+	const [isModalOpen, handleModal] = useDisclosure(false, {
+		onClose: () => {
+			setStartTime(null)
+			setEndTime(null)
+			setDay(null)
+			setRoomId(null)
+			setFacultyId(null)
+			setError(null)
+			setDisableSubmit(true)
+		},
+	})
 
 	const isSubmitting = fetcher.state !== 'idle'
 
@@ -130,10 +149,106 @@ export default function ManageSections() {
 		if (!course) return
 
 		setSelectedSection(course)
+		setStartTime(new Date(course.startTime))
+		setEndTime(new Date(course.endTime))
+		setDay(course.day)
+		setRoomId(course.roomId)
+		setFacultyId(course.facultyId)
+
 		handleModal.open()
 		// handleModal is not meemoized, so we don't need to add it to the dependency array
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [sections, selectedSectionId])
+
+	const [error, setError] = React.useState<string | null>(null)
+	const [disableSubmit, setDisableSubmit] = React.useState(true)
+
+	React.useEffect(() => {
+		if (!startTime || !endTime || !day) {
+			setDisableSubmit(true)
+			return
+		}
+
+		const _startTime = setFixedDate(startTime)
+		const _endTime = setFixedDate(endTime)
+
+		if (_startTime.getTime() >= _endTime.getTime()) {
+			setError('Start time must be less than end time')
+			return
+		}
+
+		if (!roomId || !facultyId) {
+			return
+		}
+
+		const facultySections = sections.filter(
+			section =>
+				section.facultyId === facultyId && section.id !== selectedSection?.id
+		)
+
+		const facultySectionsWithSameDay = facultySections.filter(
+			section => section.day === day
+		)
+
+		const isFacultyAvailable = facultySectionsWithSameDay.every(section => {
+			const sectionStartTime = setFixedDate(new Date(section.startTime))
+			const sectionEndTime = setFixedDate(new Date(section.endTime))
+
+			return !(
+				(_startTime.getTime() >= sectionStartTime.getTime() &&
+					_startTime.getTime() <= sectionEndTime.getTime()) ||
+				(_endTime.getTime() >= sectionStartTime.getTime() &&
+					_endTime.getTime() <= sectionEndTime.getTime())
+			)
+		})
+
+		if (!isFacultyAvailable) {
+			setError('Faculty is not available at this time')
+			return
+		}
+
+		const roomSections = sections.filter(
+			section => section.roomId === roomId && section.id !== selectedSection?.id
+		)
+
+		const roomSectionsWithSameDay = roomSections.filter(
+			section => section.day === day
+		)
+
+		const isRoomAvailable = roomSectionsWithSameDay.every(section => {
+			const sectionStartTime = setFixedDate(new Date(section.startTime))
+			const sectionEndTime = setFixedDate(new Date(section.endTime))
+
+			return !(
+				(_startTime.getTime() >= sectionStartTime.getTime() &&
+					_startTime.getTime() <= sectionEndTime.getTime()) ||
+				(_endTime.getTime() >= sectionStartTime.getTime() &&
+					_endTime.getTime() <= sectionEndTime.getTime())
+			)
+		})
+
+		if (!isRoomAvailable) {
+			setError('Room is not available at this time')
+			return
+		}
+
+		setError(null)
+		setDisableSubmit(false)
+	}, [
+		day,
+		endTime,
+		error,
+		facultyId,
+		roomId,
+		sections,
+		startTime,
+		selectedSection,
+	])
+
+	console.log({
+		startTime,
+		endTime,
+	})
 
 	return (
 		<>
@@ -236,7 +351,7 @@ export default function ManageSections() {
 													{section.course.name}
 												</td>
 												<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
-													<p>{section.day} </p>
+													<p className="font-bold">{section.day}</p>
 													<p>
 														{formatTime(section.startTime!)}
 														{' - '}
@@ -282,15 +397,44 @@ export default function ManageSections() {
 					handleModal.close()
 				}}
 				title={clsx({
-					'Edit venue': mode === MODE.edit,
-					'Add venue': mode === MODE.add,
+					'Edit section': mode === MODE.edit,
+					'Add section': mode === MODE.add,
 				})}
 				centered
 				overlayBlur={1.2}
 				overlayOpacity={0.6}
 			>
-				<fetcher.Form method="post" replace>
-					<fieldset disabled={isSubmitting} className="flex flex-col gap-4">
+				<Form
+					method="post"
+					replace
+					onSubmit={e => {
+						e.preventDefault()
+						if (!startTime || !endTime) return
+
+						const formData = new FormData(e.currentTarget)
+
+						formData.append('startTime', startTime.toISOString())
+						formData.append('endTime', endTime.toISOString())
+						fetcher.submit(formData, {
+							method: 'post',
+							replace: true,
+						})
+					}}
+				>
+					{error && (
+						<Alert
+							icon={<InformationCircleIcon className="h-4 w-4" />}
+							title="Conflict!"
+							color="red"
+						>
+							{error}
+						</Alert>
+					)}
+
+					<fieldset
+						disabled={isSubmitting}
+						className="mt-2 flex flex-col gap-4"
+					>
 						<input type="hidden" name="sectionId" value={selectedSection?.id} />
 
 						<TextInput
@@ -324,7 +468,8 @@ export default function ManageSections() {
 						<Select
 							name="facultyId"
 							label="Faculty"
-							defaultValue={selectedSection?.faculty.id}
+							value={facultyId}
+							onChange={e => setFacultyId(e)}
 							error={fetcher.data?.fieldErrors?.facultyId}
 							data={faculties.map(faculty => ({
 								value: faculty.id,
@@ -336,7 +481,8 @@ export default function ManageSections() {
 						<Select
 							name="roomId"
 							label="Room"
-							defaultValue={selectedSection?.room.id}
+							value={roomId}
+							onChange={e => setRoomId(e)}
 							error={fetcher.data?.fieldErrors?.roomId}
 							data={rooms.map(room => ({
 								value: room.id,
@@ -348,7 +494,8 @@ export default function ManageSections() {
 						<Select
 							name="day"
 							label="Day"
-							defaultValue={selectedSection?.day}
+							value={day}
+							onChange={e => setDay(e as Day)}
 							error={fetcher.data?.fieldErrors?.day}
 							data={Object.values(Day).map(day => ({
 								value: day,
@@ -359,25 +506,19 @@ export default function ManageSections() {
 
 						<div className="grid grid-cols-2 gap-4">
 							<TimeInput
-								name="startTime"
 								label="Start Time"
-								defaultValue={
-									selectedSection?.startTime
-										? new Date(selectedSection?.startTime)
-										: null
-								}
+								format="12"
+								value={startTime}
+								onChange={e => setStartTime(e)}
 								error={fetcher.data?.fieldErrors?.startTime}
 								required
 							/>
 
 							<TimeInput
-								name="endTime"
 								label="End Time"
-								defaultValue={
-									selectedSection?.endTime
-										? new Date(selectedSection?.endTime)
-										: null
-								}
+								value={endTime}
+								format="12"
+								onChange={e => setEndTime(e)}
 								error={fetcher.data?.fieldErrors?.endTime}
 								required
 							/>
@@ -399,12 +540,13 @@ export default function ManageSections() {
 								type="submit"
 								loading={isSubmitting}
 								loaderPosition="right"
+								disabled={disableSubmit}
 							>
 								{mode === MODE.edit ? 'Save changes' : 'Create'}
 							</Button>
 						</div>
 					</fieldset>
-				</fetcher.Form>
+				</Form>
 			</Modal>
 		</>
 	)

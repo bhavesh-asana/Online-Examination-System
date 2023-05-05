@@ -15,6 +15,7 @@ import {userRoleLookup} from '~/utils/misc'
 import {badRequest, safeRedirect} from '~/utils/misc.server'
 import type {inferErrors} from '~/utils/validation'
 import {validateAction} from '~/utils/validation'
+import * as React from 'react'
 
 const LoginSchema = z.object({
 	email: z.string().email(),
@@ -60,6 +61,8 @@ export default function Login() {
 	const fetcher = useFetcher<ActionData>()
 	const actionData = fetcher.data
 
+	const [role, setRole] = React.useState<UserRole>(UserRole.ADMIN)
+
 	const redirectTo = searchParams.get('redirectTo') || '/'
 	const isSubmitting = fetcher.state !== 'idle'
 
@@ -68,10 +71,19 @@ export default function Login() {
 			<div>
 				<h2 className="mt-6 text-3xl font-extrabold text-gray-900">Sign in</h2>
 				<p className="mt-2 text-sm text-gray-600">
-					Do not have an account yet?{' '}
-					<Anchor component={Link} to="/register" size="sm" prefetch="intent">
-						Create account
-					</Anchor>
+					{role === UserRole.STUDENT && (
+						<>
+							Do not have an account yet?{' '}
+							<Anchor
+								component={Link}
+								to="/register"
+								size="sm"
+								prefetch="intent"
+							>
+								Create account
+							</Anchor>
+						</>
+					)}
 				</p>
 			</div>
 
@@ -82,6 +94,9 @@ export default function Login() {
 					<SegmentedControl
 						fullWidth
 						name="role"
+						value={role}
+						onChange={e => setRole(e as UserRole)}
+						color="blue"
 						mb={12}
 						data={Object.values(UserRole).map(role => ({
 							label: userRoleLookup(role),

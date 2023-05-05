@@ -1,4 +1,4 @@
-# Online Examination System
+# Event Management System
 
 ## Commands
 

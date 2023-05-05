@@ -54,11 +54,30 @@ export const loader = async ({request}: LoaderArgs) => {
 		},
 	})
 
+	const students = await db.user.findMany({
+		where: {
+			role: UserRole.STUDENT,
+		},
+		include: {
+			schedules: {
+				include: {
+					section: {
+						include: {
+							course: true,
+							faculty: true,
+						},
+					},
+				},
+			},
+		},
+	})
+
 	return json({
 		courses,
 		rooms,
 		faculties,
 		sections,
+		students,
 	})
 }
 
@@ -133,16 +152,4 @@ function HeaderComponent() {
 			</Header>
 		</>
 	)
-}
-
-export const unstable_shouldReload: ShouldReloadFunction = ({
-	submission,
-	prevUrl,
-	url,
-}) => {
-	if (!submission && prevUrl.pathname === url.pathname) {
-		return false
-	}
-
-	return true
 }
