@@ -64,7 +64,8 @@ export default function OrganizerAppLayout() {
 function HeaderComponent() {
 	const {user} = useUser()
 
-	const [isModalOpen, handleModal] = useDisclosure(false)
+	const hasResetPassword = Boolean(user.lastPasswordResetAt)
+	const [isModalOpen, handleModal] = useDisclosure(!hasResetPassword)
 
 	const fetcher = useFetcher()
 	const isSubmitting = fetcher.state !== 'idle'
@@ -168,6 +169,9 @@ function HeaderComponent() {
 				centered
 				overlayBlur={1}
 				overlayOpacity={0.5}
+				withCloseButton={!hasResetPassword}
+				closeOnEscape={!hasResetPassword}
+				closeOnClickOutside={!hasResetPassword}
 			>
 				<fetcher.Form
 					method="post"

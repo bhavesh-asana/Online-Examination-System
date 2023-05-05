@@ -13,14 +13,6 @@ async function seed() {
 	await db.timeSlot.deleteMany()
 	await db.studentSchedule.deleteMany()
 
-	await db.admin.create({
-		data: {
-			name: 'Admin',
-			email: 'admin@app.com',
-			password: await createPasswordHash('password'),
-		},
-	})
-
 	const admin = await db.user.create({
 		data: {
 			name: 'Admin',
