@@ -20,6 +20,7 @@ export const action = async ({request}: ActionArgs) => {
 		where: {id: userId},
 		data: {
 			password: await createPasswordHash(password),
+			lastPasswordResetAt: new Date(),
 		},
 	})
 

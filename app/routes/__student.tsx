@@ -1,10 +1,21 @@
 import {ArrowLeftOnRectangleIcon} from '@heroicons/react/24/solid'
 
-import {Anchor, Avatar, Button, Divider, Menu, ScrollArea} from '@mantine/core'
+import {
+	Anchor,
+	Avatar,
+	Button,
+	Divider,
+	Menu,
+	Modal,
+	ScrollArea,
+	TextInput,
+} from '@mantine/core'
+import {useDisclosure} from '@mantine/hooks'
 import type {LoaderArgs, SerializeFrom} from '@remix-run/node'
 import {json, redirect} from '@remix-run/node'
-import {Form, Link, Outlet} from '@remix-run/react'
+import {Form, Link, Outlet, useFetcher} from '@remix-run/react'
 import appConfig from 'app.config'
+import React from 'react'
 import {TailwindContainer} from '~/components/TailwindContainer'
 import {db} from '~/db.server'
 import {isAdmin, isFaculty, requireUserId} from '~/session.server'
@@ -64,6 +75,23 @@ export default function AppLayout() {
 
 function HeaderComponent() {
 	const {user} = useUser()
+
+	const hasResetPassword = Boolean(user.lastPasswordResetAt)
+	const [isModalOpen, handleModal] = useDisclosure(!hasResetPassword)
+
+	const fetcher = useFetcher()
+	const isSubmitting = fetcher.state !== 'idle'
+	React.useEffect(() => {
+		if (fetcher.type !== 'done') {
+			return
+		}
+
+		if (!fetcher.data.success) {
+			return
+		}
+
+		handleModal.close()
+	}, [fetcher.data, fetcher.type, handleModal])
 
 	return (
 		<>
@@ -143,6 +171,45 @@ function HeaderComponent() {
 					</div>
 				</TailwindContainer>
 			</header>
+
+			<Modal
+				opened={isModalOpen}
+				onClose={handleModal.close}
+				title="Reset Password"
+				centered
+				overlayBlur={1}
+				overlayOpacity={0.5}
+				withCloseButton={!hasResetPassword}
+				closeOnEscape={!hasResetPassword}
+				closeOnClickOutside={!hasResetPassword}
+			>
+				<fetcher.Form
+					method="post"
+					replace
+					className="flex flex-col gap-4"
+					action="/api/reset-password"
+				>
+					<div className="mt-6 grid grid-cols-2 gap-4">
+						<input hidden name="userId" defaultValue={user.id} />
+						<TextInput
+							required
+							name="password"
+							type="password"
+							placeholder="Password"
+						/>
+
+						<Button
+							variant="filled"
+							type="submit"
+							fullWidth
+							loading={isSubmitting}
+							loaderPosition="right"
+						>
+							Update
+						</Button>
+					</div>
+				</fetcher.Form>
+			</Modal>
 		</>
 	)
 }

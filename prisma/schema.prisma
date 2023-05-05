@@ -9,11 +9,12 @@ generator client {
 }
 
 model User {
-  id       String   @id @default(auto()) @map("_id") @db.ObjectId
-  name     String
-  email    String   @unique
-  password String
-  role     UserRole @default(STUDENT)
+  id                  String    @id @default(auto()) @map("_id") @db.ObjectId
+  name                String
+  email               String    @unique
+  password            String
+  role                UserRole  @default(STUDENT)
+  lastPasswordResetAt DateTime? @map("last_password_reset_at")
 
   sections  Section[]
   schedules StudentSchedule[]
