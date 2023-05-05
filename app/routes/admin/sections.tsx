@@ -1,15 +1,11 @@
-import {
-	ArrowLeftIcon,
-	InformationCircleIcon,
-	PlusIcon,
-} from '@heroicons/react/24/solid'
+import {InformationCircleIcon, PlusIcon} from '@heroicons/react/24/solid'
 import {Alert, Button, Modal, Select, TextInput, clsx} from '@mantine/core'
 import {TimeInput} from '@mantine/dates'
 import {useDisclosure} from '@mantine/hooks'
 import {Day} from '@prisma/client'
 import type {ActionFunction} from '@remix-run/node'
 import {json} from '@remix-run/node'
-import {Form, Link, useFetcher} from '@remix-run/react'
+import {Form, useFetcher} from '@remix-run/react'
 import * as React from 'react'
 import {z} from 'zod'
 import {TailwindContainer} from '~/components/TailwindContainer'
@@ -256,24 +252,7 @@ export default function ManageSections() {
 				<div className="mt-8 px-4 py-10 sm:px-6 lg:px-8">
 					<div className="sm:flex sm:flex-auto sm:items-center sm:justify-between">
 						<div>
-							<Button
-								leftIcon={<ArrowLeftIcon className="h-4 w-4" />}
-								variant="white"
-								size="md"
-								component={Link}
-								to=".."
-								pl={0}
-								mb={20}
-								color="gray"
-							>
-								Back
-							</Button>
-							<h1 className="text-3xl font-semibold text-gray-900">
-								Manage Sections
-							</h1>
-							<p className="mt-2 text-sm text-gray-700">
-								Manage the sections that are available to students.
-							</p>
+							<h1 className="text-3xl font-semibold text-gray-900">Sections</h1>
 						</div>
 						<div>
 							<Button

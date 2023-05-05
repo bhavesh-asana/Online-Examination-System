@@ -1,9 +1,8 @@
-import {ArrowLeftIcon} from '@heroicons/react/24/solid'
 import {Button, Select} from '@mantine/core'
 import type {User} from '@prisma/client'
 import type {ActionFunction} from '@remix-run/node'
 import {json} from '@remix-run/node'
-import {Link, useFetcher} from '@remix-run/react'
+import {useFetcher} from '@remix-run/react'
 import * as React from 'react'
 import {z} from 'zod'
 import {TailwindContainer} from '~/components/TailwindContainer'
@@ -60,29 +59,9 @@ export default function ManageZones() {
 			<TailwindContainer className="rounded-md bg-white">
 				<div className="mt-8 px-4 py-10 sm:px-6 lg:px-8">
 					<div className="sm:flex sm:flex-auto sm:items-center sm:justify-between">
-						<div>
-							<Button
-								leftIcon={<ArrowLeftIcon className="h-4 w-4" />}
-								variant="white"
-								size="md"
-								component={Link}
-								to=".."
-								pl={0}
-								mb={20}
-								color="gray"
-							>
-								Back
-							</Button>
-							<h1 className="text-3xl font-semibold text-gray-900">
-								Manage Students
-							</h1>
-							<p className="mt-2 text-sm text-gray-700">
-								A list of all the students in the system.
-							</p>
-						</div>
-						<div className="flex items-end gap-4">
+						<div className="flex flex-col gap-4">
+							<h1 className="text-3xl font-semibold text-gray-900">Students</h1>
 							<Select
-								label="Student"
 								value={studentId}
 								onChange={setStudentId}
 								clearable

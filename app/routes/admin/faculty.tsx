@@ -1,10 +1,11 @@
-import {ArrowLeftIcon, PlusIcon} from '@heroicons/react/24/solid'
+import {PlusIcon} from '@heroicons/react/24/solid'
 import {Button, Modal, PasswordInput, TextInput} from '@mantine/core'
 import {useDisclosure} from '@mantine/hooks'
 import {UserRole} from '@prisma/client'
 import type {ActionFunction} from '@remix-run/node'
 import {json} from '@remix-run/node'
-import {Link, useFetcher} from '@remix-run/react'
+import {useFetcher} from '@remix-run/react'
+import * as React from 'react'
 import {z} from 'zod'
 import {TailwindContainer} from '~/components/TailwindContainer'
 import {db} from '~/db.server'
@@ -12,7 +13,6 @@ import {useAdminData} from '~/utils/hooks'
 import {badRequest, createPasswordHash} from '~/utils/misc.server'
 import type {inferErrors} from '~/utils/validation'
 import {validateAction} from '~/utils/validation'
-import * as React from 'react'
 
 const AddFacultySchema = z.object({
 	name: z.string().min(1, 'Name is required'),
@@ -71,24 +71,7 @@ export default function ManageFaculties() {
 				<div className="mt-8 px-4 py-10 sm:px-6 lg:px-8">
 					<div className="sm:flex sm:flex-auto sm:items-center sm:justify-between">
 						<div>
-							<Button
-								leftIcon={<ArrowLeftIcon className="h-4 w-4" />}
-								variant="white"
-								size="md"
-								component={Link}
-								to=".."
-								pl={0}
-								mb={20}
-								color="gray"
-							>
-								Back
-							</Button>
-							<h1 className="text-3xl font-semibold text-gray-900">
-								Manage Faculty
-							</h1>
-							<p className="mt-2 text-sm text-gray-700">
-								A list of all the faculty in the system.
-							</p>
+							<h1 className="text-3xl font-semibold text-gray-900">Faculty</h1>
 						</div>
 						<div>
 							<Button
