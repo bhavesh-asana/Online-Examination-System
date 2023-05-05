@@ -1,6 +1,6 @@
 import {ArrowLeftOnRectangleIcon} from '@heroicons/react/24/solid'
 
-import {Anchor, Avatar, Divider, Footer, Menu, ScrollArea} from '@mantine/core'
+import {Anchor, Avatar, Button, Divider, Menu, ScrollArea} from '@mantine/core'
 import type {LoaderArgs, SerializeFrom} from '@remix-run/node'
 import {json, redirect} from '@remix-run/node'
 import {Form, Link, Outlet} from '@remix-run/react'
@@ -53,7 +53,7 @@ export default function AppLayout() {
 		<>
 			<div className="flex h-full flex-col">
 				<HeaderComponent />
-				<ScrollArea classNames={{root: 'flex-1 bg-gray-100'}}>
+				<ScrollArea classNames={{root: 'flex-1'}}>
 					<Content />
 				</ScrollArea>
 				<FooterComponent />
@@ -68,7 +68,7 @@ function HeaderComponent() {
 	return (
 		<>
 			<Form replace action="/api/auth/logout" method="post" id="logout-form" />
-			<header className="h-[100px] p-4">
+			<header className="h-[80px] bg-blue-500 p-4">
 				<TailwindContainer>
 					<div className="flex h-full w-full items-center justify-between">
 						<div className="flex flex-shrink-0 items-center gap-4">
@@ -79,6 +79,28 @@ function HeaderComponent() {
 									alt="Logo"
 								/>
 							</Anchor>
+						</div>
+
+						<div className="flex items-center gap-4">
+							<Button
+								component={Link}
+								to="/"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								Courses
+							</Button>
+
+							<Button
+								component={Link}
+								to="/join-classes"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								All Classes
+							</Button>
 						</div>
 
 						<div className="flex items-center gap-4">
@@ -134,15 +156,5 @@ function Content() {
 }
 
 function FooterComponent() {
-	return (
-		<Footer
-			height={44}
-			p="md"
-			className="flex items-center justify-center py-1 text-center text-sm"
-		>
-			<span className="text-gray-400">
-				©{new Date().getFullYear()} {appConfig.name}, Inc. All rights reserved.
-			</span>
-		</Footer>
-	)
+	return <footer></footer>
 }

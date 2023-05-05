@@ -1,17 +1,8 @@
 import {ArrowLeftOnRectangleIcon} from '@heroicons/react/24/solid'
 
-import {
-	Anchor,
-	Avatar,
-	Button,
-	Divider,
-	Header,
-	Menu,
-	ScrollArea,
-} from '@mantine/core'
+import {Anchor, Avatar, Button, Divider, Menu, ScrollArea} from '@mantine/core'
 import type {LoaderArgs, SerializeFrom} from '@remix-run/node'
 import {json, redirect} from '@remix-run/node'
-import type {ShouldReloadFunction} from '@remix-run/react'
 import {Form, Link, Outlet} from '@remix-run/react'
 import appConfig from 'app.config'
 import {Footer} from '~/components/Footer'
@@ -49,7 +40,7 @@ export default function OrganizerAppLayout() {
 	return (
 		<div className="flex h-full flex-col">
 			<HeaderComponent />
-			<ScrollArea classNames={{root: 'flex-1 bg-gray-100'}}>
+			<ScrollArea classNames={{root: 'flex-1'}}>
 				<main>
 					<Outlet />
 				</main>
@@ -65,7 +56,7 @@ function HeaderComponent() {
 	return (
 		<>
 			<Form replace action="/api/auth/logout" method="post" id="logout-form" />
-			<Header height={100} p="md">
+			<header className="h-[80px] bg-blue-500 p-4">
 				<TailwindContainer>
 					<div className="flex h-full w-full items-center justify-between">
 						<div className="flex flex-shrink-0 items-center gap-4">
@@ -77,12 +68,29 @@ function HeaderComponent() {
 								/>
 							</Anchor>
 						</div>
-
 						<div className="flex items-center gap-4">
-							<Button component={Link} to="tests" variant="outline" compact>
-								Tests
+							<Button
+								component={Link}
+								to="/faculty"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								Home
 							</Button>
 
+							<Button
+								component={Link}
+								to="tests"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								Tests
+							</Button>
+						</div>
+
+						<div className="flex items-center gap-4">
 							<Menu
 								position="bottom-start"
 								withArrow
@@ -117,7 +125,7 @@ function HeaderComponent() {
 						</div>
 					</div>
 				</TailwindContainer>
-			</Header>
+			</header>
 		</>
 	)
 }

@@ -1,16 +1,15 @@
 import {ArrowLeftOnRectangleIcon} from '@heroicons/react/24/solid'
 
-import {Anchor, Avatar, Divider, Header, Menu, ScrollArea} from '@mantine/core'
+import {Anchor, Avatar, Button, Divider, Menu, ScrollArea} from '@mantine/core'
 import {UserRole} from '@prisma/client'
 import type {LoaderArgs, SerializeFrom} from '@remix-run/node'
 import {json, redirect} from '@remix-run/node'
-import type {ShouldReloadFunction} from '@remix-run/react'
 import {Form, Link, Outlet} from '@remix-run/react'
 import appConfig from 'app.config'
 import {Footer} from '~/components/Footer'
 import {TailwindContainer} from '~/components/TailwindContainer'
 import {db} from '~/db.server'
-import {isStudent, isFaculty, requireUser} from '~/session.server'
+import {isFaculty, isStudent, requireUser} from '~/session.server'
 import {useUser} from '~/utils/hooks'
 
 export type AdminLoaderData = SerializeFrom<typeof loader>
@@ -85,7 +84,7 @@ export default function AdminAppLayout() {
 	return (
 		<div className="flex h-full flex-col">
 			<HeaderComponent />
-			<ScrollArea classNames={{root: 'flex-1 bg-gray-100'}}>
+			<ScrollArea classNames={{root: 'flex-1'}}>
 				<main>
 					<Outlet />
 				</main>
@@ -101,7 +100,7 @@ function HeaderComponent() {
 	return (
 		<>
 			<Form replace action="/api/auth/logout" method="post" id="logout-form" />
-			<Header height={100} p="md">
+			<header className="h-[80px] bg-blue-500 p-4">
 				<TailwindContainer>
 					<div className="flex h-full w-full items-center justify-between">
 						<div className="flex flex-shrink-0 items-center gap-4">
@@ -114,6 +113,57 @@ function HeaderComponent() {
 							</Anchor>
 						</div>
 
+						<div className="flex items-center gap-4">
+							<Button
+								component={Link}
+								to="/admin"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								Courses
+							</Button>
+
+							<Button
+								component={Link}
+								to="/admin/room"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								Rooms
+							</Button>
+
+							<Button
+								component={Link}
+								to="/admin/sections"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								Sections
+							</Button>
+
+							<Button
+								component={Link}
+								to="/admin/students"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								Students
+							</Button>
+
+							<Button
+								component={Link}
+								to="/admin/faculty"
+								variant="light"
+								size="sm"
+								color="dark"
+							>
+								Faculty
+							</Button>
+						</div>
 						<div className="flex items-center gap-4">
 							<Menu
 								position="bottom-start"
@@ -149,7 +199,7 @@ function HeaderComponent() {
 						</div>
 					</div>
 				</TailwindContainer>
-			</Header>
+			</header>
 		</>
 	)
 }

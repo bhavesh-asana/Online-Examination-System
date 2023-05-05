@@ -1,107 +1,192 @@
-import {BookOpenIcon, BuildingOfficeIcon} from '@heroicons/react/24/solid'
-import type {LoaderArgs} from '@remix-run/node'
+import {PlusIcon} from '@heroicons/react/24/solid'
+import {Button} from '@mantine/core'
+import type {ActionArgs} from '@remix-run/node'
 import {json} from '@remix-run/node'
-import {Link} from '@remix-run/react'
-import clsx from 'clsx'
+import {Link, useFetcher} from '@remix-run/react'
+import * as React from 'react'
+import {z} from 'zod'
 import {TailwindContainer} from '~/components/TailwindContainer'
+import {db} from '~/db.server'
 import {requireUserId} from '~/session.server'
+import {useStudentData} from '~/utils/hooks'
+import {formatTime} from '~/utils/misc'
+import {badRequest} from '~/utils/misc.server'
+import type {inferErrors} from '~/utils/validation'
+import {validateAction} from '~/utils/validation'
 
-const actions = [
-	{
-		title: 'Enrolled Classes',
-		description: 'View and manage classes you are enrolled in',
-		href: 'classes',
-		icon: BookOpenIcon,
-	},
-	{
-		title: 'Available Classes',
-		description: 'Add classes to your schedule',
-		href: 'join-classes',
-		icon: BuildingOfficeIcon,
-	},
-]
+const DropScheduleSchema = z.object({
+	scheduleId: z.string().min(1, 'Schedule is required'),
+})
 
-export const loader = async ({request}: LoaderArgs) => {
-	await requireUserId(request)
-	return json({})
+interface ActionData {
+	success: boolean
+	fieldErrors?: inferErrors<typeof DropScheduleSchema>
 }
 
-export default function AdminDashboard() {
-	return (
-		<div className="flex flex-col gap-4 p-4">
-			<div className="bg-white">
-				<TailwindContainer>
-					<div className="py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
-						<h2 className="text-2xl font-extrabold tracking-tight text-gray-900">
-							Student Dashboard
-						</h2>
+export const action = async ({request}: ActionArgs) => {
+	const studentId = await requireUserId(request)
+	const {fields, fieldErrors} = await validateAction(
+		request,
+		DropScheduleSchema
+	)
 
-						<div className="mt-12 divide-y divide-gray-200 overflow-hidden rounded-lg bg-gray-200 shadow sm:grid sm:grid-cols-2 sm:gap-px sm:divide-y-0">
-							{actions.map((action, actionIdx) => (
-								<Card action={action} actionIdx={actionIdx} key={actionIdx} />
-							))}
+	if (fieldErrors) {
+		return badRequest<ActionData>({success: false, fieldErrors})
+	}
+
+	await db.studentSchedule.delete({
+		where: {
+			id: fields.scheduleId,
+			studentId,
+		},
+	})
+	return json({success: true})
+}
+
+export default function ManageSection() {
+	const {schedules} = useStudentData()
+	const fetcher = useFetcher<ActionData>()
+
+	const isSubmitting = fetcher.state !== 'idle'
+
+	React.useEffect(() => {
+		if (fetcher.state !== 'idle' && fetcher.submission === undefined) {
+			return
+		}
+
+		if (fetcher.data?.success) {
+			// TODO: refresh the data
+		}
+		// handleModal is not meemoized, so we don't need to add it to the dependency array
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [fetcher.data?.success, fetcher.state, fetcher.submission])
+
+	return (
+		<>
+			<TailwindContainer className="rounded-md bg-white">
+				<div className="mt-8 px-4 py-10 sm:px-6 lg:px-8">
+					<div className="sm:flex sm:flex-auto sm:items-center sm:justify-between">
+						<div>
+							<h1 className="text-3xl font-semibold text-gray-900">
+								My Classes
+							</h1>
+						</div>
+
+						<div>
+							<Button component={Link} to="/join-classes" loaderPosition="left">
+								<PlusIcon className="h-4 w-4" />
+								<span className="ml-2">Add</span>
+							</Button>
 						</div>
 					</div>
-				</TailwindContainer>
-			</div>
-		</div>
-	)
-}
+					<div className="mt-8 flex flex-col">
+						<div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+							<div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+								<table className="min-w-full divide-y divide-gray-300">
+									<thead>
+										<tr>
+											<th
+												scope="col"
+												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
+											>
+												Section
+											</th>
 
-function Card({
-	action,
-	actionIdx,
-}: {
-	action: typeof actions[number]
-	actionIdx: number
-}) {
-	return (
-		<div
-			key={action.title}
-			className={clsx(
-				actionIdx === 0 ? 'rounded-tl-lg rounded-tr-lg sm:rounded-tr-none' : '',
-				actionIdx === 1 ? 'sm:rounded-tr-lg' : '',
-				actionIdx === actions.length - 2 ? 'sm:rounded-bl-lg' : '',
-				actionIdx === actions.length - 1
-					? 'rounded-bl-lg rounded-br-lg sm:rounded-bl-none'
-					: '',
-				'group relative bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-500'
-			)}
-		>
-			<div>
-				<span
-					className={clsx(
-						'text-blue-700',
-						'bg-blue-50',
-						'inline-flex rounded-lg p-3 ring-4 ring-white'
-					)}
-				>
-					<action.icon className="h-6 w-6" aria-hidden="true" />
-				</span>
-			</div>
-			<div className="mt-8">
-				<h3 className="text-lg font-medium">
-					<Link to={action.href} className="focus:outline-none">
-						{/* Extend touch target to entire panel */}
-						<span className="absolute inset-0" aria-hidden="true" />
-						{action.title}
-					</Link>
-				</h3>
-				<p className="mt-2 text-sm text-gray-500">{action.description}</p>
-			</div>
-			<span
-				className="pointer-events-none absolute top-6 right-6 text-gray-300 group-hover:text-gray-400"
-				aria-hidden="true"
-			>
-				<svg
-					className="h-6 w-6"
-					xmlns="http://www.w3.org/2000/svg"
-					fill="currentColor"
-					viewBox="0 0 24 24"
-				>
-					<path d="M20 4h1a1 1 0 00-1-1v1zm-1 12a1 1 0 102 0h-2zM8 3a1 1 0 000 2V3zM3.293 19.293a1 1 0 101.414 1.414l-1.414-1.414zM19 4v12h2V4h-2zm1-1H8v2h12V3zm-.707.293l-16 16 1.414 1.414 16-16-1.414-1.414z" />
-				</svg>
-			</span>
-		</div>
+											<th
+												scope="col"
+												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
+											>
+												Time
+											</th>
+											<th
+												scope="col"
+												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
+											>
+												Course
+											</th>
+											<th
+												scope="col"
+												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
+											>
+												Faculty
+											</th>
+											<th
+												scope="col"
+												className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 md:pl-0"
+											>
+												Room
+											</th>
+											<th
+												scope="col"
+												className="relative py-3.5 pl-3 pr-4 sm:pr-6 md:pr-0"
+											></th>
+										</tr>
+									</thead>
+
+									<tbody className="divide-y divide-gray-200">
+										{schedules.map(schedule => (
+											<tr key={schedule.id}>
+												<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
+													{schedule.section.name} ({schedule.section.code})
+												</td>
+												<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
+													<p className="font-medium">{schedule.section.day}</p>
+													<span className="text-xs text-gray-500">
+														{formatTime(schedule.section.startTime)} -{' '}
+														{formatTime(schedule.section.endTime)}
+													</span>
+												</td>
+												<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
+													{schedule.section.course.name} (
+													{schedule.section.course.code})
+												</td>
+												<td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6 md:pl-0">
+													{schedule.section.faculty.name}
+												</td>
+
+												<td className="relative space-x-4 whitespace-nowrap py-4 pl-3 pr-4 text-left text-sm font-medium sm:pr-6 md:pr-0">
+													{schedule.section.room.no}
+												</td>
+												<td className="relative space-x-4 whitespace-nowrap py-4 pl-3 pr-4 text-left text-sm font-medium sm:pr-6 md:pr-0">
+													<Button
+														variant="subtle"
+														compact
+														color="red"
+														loading={isSubmitting}
+														onClick={() => {
+															fetcher.submit(
+																{
+																	scheduleId: schedule.id,
+																},
+																{
+																	method: 'post',
+																	replace: true,
+																}
+															)
+														}}
+													>
+														Drop
+													</Button>
+
+													<Button
+														variant="subtle"
+														compact
+														component={Link}
+														to={`/classes/${schedule.sectionId}`}
+														disabled={isSubmitting}
+													>
+														View
+													</Button>
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div>
+			</TailwindContainer>
+		</>
 	)
 }

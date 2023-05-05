@@ -1,10 +1,8 @@
-import {ArrowLeftIcon} from '@heroicons/react/24/solid'
 import {Button, Drawer, NumberInput, Select, TextInput} from '@mantine/core'
 import {useDisclosure} from '@mantine/hooks'
 import type {User} from '@prisma/client'
 import type {ActionFunction, LoaderArgs} from '@remix-run/node'
-import {redirect} from '@remix-run/node'
-import {json} from '@remix-run/node'
+import {json, redirect} from '@remix-run/node'
 import {Link, useFetcher, useLoaderData} from '@remix-run/react'
 import * as React from 'react'
 import {z} from 'zod'
@@ -109,20 +107,9 @@ export default function ManageZones() {
 	return (
 		<>
 			<TailwindContainer className="">
-				<div className="px-8">
+				<div className="mt-8 px-8">
 					<div className="sm:flex sm:flex-auto sm:items-center sm:justify-between">
 						<div>
-							<Button
-								leftIcon={<ArrowLeftIcon className="h-4 w-4" />}
-								variant="subtle"
-								size="md"
-								component={Link}
-								to=".."
-								mb={20}
-								color="dark"
-							>
-								Back
-							</Button>
 							<h1 className="text-3xl font-semibold text-gray-900">Quizzes</h1>
 						</div>
 						<div className="flex items-end gap-4">
