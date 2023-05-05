@@ -120,6 +120,15 @@ model Question {
   @@map("question")
 }
 
+model Admin {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  name     String
+  email    String @unique
+  password String
+
+  @@map("admin")
+}
+
 model Test {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   createdAt   DateTime @default(now())
